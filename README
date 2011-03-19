@@ -1,0 +1,4 @@
+Requires fabric to run.
+
+Usage:
+  fab build:stub="http://some/stubfile.build"
