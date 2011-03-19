@@ -6,13 +6,12 @@ def build(stub):
     # parse project stub (in /var/aegir/build/project.build) 
     #   to get profile repo and clone it to tmp
     repo = local('./get_profile_repo.php %s' % stub, True)
-    stub_id = stub.split('/')[-1].split('.')[0]
+    stub_id = local('./get_profile_name.php %s' % stub, True)
 
     # get sha1 of latest commit
     # build id is now project-SHA1
     # remove tmp checkout
     tmp_repo = '/tmp/' + stub_id
-    print tmp_repo
     local('rm -rf %s' % (tmp_repo))
     local('git clone %s %s' % (repo, tmp_repo))
     with lcd(tmp_repo):
