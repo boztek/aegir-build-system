@@ -1,4 +1,6 @@
 Requires fabric to run.
+Stub file parsing is utilising drush make code at moment so that has to be 
+installed and configured in the php script.
 
 Usage:
   fab build:stub="http://some/stubfile.build"
