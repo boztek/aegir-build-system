@@ -5,8 +5,8 @@ from datetime import date
 def build(stub, branch='develop', domain='pinkgators.com'):
     # parse project stub (in /var/aegir/build/project.build) 
     #   to get profile repo and clone it to tmp
-    repo = local('./get_profile_repo.php %s' % stub, True)
-    stub_id = local('./get_profile_name.php %s' % stub, True)
+    repo = local('php get_profile_repo.php %s' % stub, True)
+    stub_id = local('php get_profile_name.php %s' % stub, True)
     site_uri = stub_id + "-dev." + domain
 
     # get sha1 of latest commit
