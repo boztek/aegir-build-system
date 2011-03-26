@@ -4,3 +4,14 @@ installed and configured in the php script.
 
 Usage:
   fab build:stub=http://some/stubfile.build
+
+TODO
+----
+
+- make sure return 0/1 for jenkins
+- make site uri an argument
+- break out migration steps to optional functions
+- add error handling for each migration step
+- option to delete previous platform if no sites exist on it
+- if site doesn't exist, then provision it
+- optional rollback if a migration step fails
