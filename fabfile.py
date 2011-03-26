@@ -47,8 +47,8 @@ def build(stub, branch='develop', domain='pinkgators.com'):
       local('php /var/aegir/drush/drush.php provision-migrate %s %s' % (site_uri, path_to_platform))
     else:
       # provision-site @project-dev.devserver.com
-      local('php /var/aegir/drush/drush.php provision-save --uri="%s" --platform="@platform_%s" "@%s"', % (site_uri, platform_id, site_uri))
-      local('php /var/aegir/drush/drush.php provision-install @%s', site_uri)
+      local('php /var/aegir/drush/drush.php provision-save --uri="%s" --platform="@platform_%s" "@%s"' % (site_uri, platform_id, site_uri))
+      local('php /var/aegir/drush/drush.php provision-install @%s' % site_uri)
 
     # clean up old platform(s)
     #
