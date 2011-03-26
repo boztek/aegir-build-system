@@ -45,8 +45,6 @@ def build(stub, branch='develop', domain='pinkgators.com'):
     with settings(warn_only=True):
         existing_site = local('drush sa |grep "%s"' % site_uri, True)
     if existing_site:
-        print existing_site
-        print "migrate site"
         local('php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify' % platform_id)
         local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
         local("php /var/aegir/drush/drush.php @%s provision-migrate '@platform_%s'" % (site_uri, platform_id))
