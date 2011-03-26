@@ -38,17 +38,32 @@ def build(stub, branch='develop', domain='pinkgators.com'):
     local('drush provision-save @platform_%s --context_type=platform \
                 --root="%s" --makefile="%s"' % (platform_id, path_to_platform, makefile))
     local('drush provision-verify @platform_%s' % platform_id)
-    local('drush hosting-import @platform_%s' % platform_id)
+    local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
+    local('drush @hostmaster hosting-import @platform_%s' % platform_id)
 
     # if @project-dev.devserver.com exists
-    existing_site = local('drush sa |grep "%s"' % site_uri, True)
-    if exisiting_site:
-      # migrate @project-dev.devserver.com to @platform_projectSHA1
-      local('php /var/aegir/drush/drush.php provision-migrate %s %s' % (site_uri, path_to_platform))
+    with settings(warn_only=True):
+        existing_site = local('drush sa |grep "%s"' % site_uri, True)
+    if existing_site:
+        print existing_site
+        print "migrate site"
+        local('php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify' % platform_id)
+        local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
+        local("php /var/aegir/drush/drush.php @%s provision-migrate '@platform_%s'" % (site_uri, platform_id))
+        local("php /var/aegir/drush/drush.php --uri='%s' --platform='@platform_%s' --root='/var/aegir/platforms/%s/%s' --profile='%s' provision-save '@%s'" % (site_uri, platform_id, stub_id, platform_id, stub_id, site_uri))
+        backup = local('ls -t /var/aegir/backups/%s-* | head -1' % (stub_id), True)
+        local("php /var/aegir/drush/drush.php --old_uri='%s' @%s provision-deploy %s" % (site_uri, site_uri, backup))
+        local("php /var/aegir/drush/drush.php @hostmaster hosting-import @%s" % (site_uri))
+        local("php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify" % platform_id)
+        local("php /var/aegir/drush/drush.php @hostmaster hosting-task @%s verify" % site_uri)
     else:
+        print "provision site"
+        #migrate @project-dev.devserver.com to @platform_projectSHA1
+    #  local('php /var/aegir/drush/drush.php @%s provision-migrate %s -vd' % (site_uri, path_to_platform))
+    #else:
       # provision-site @project-dev.devserver.com
-      local('php /var/aegir/drush/drush.php provision-save --uri="%s" --platform="@platform_%s" "@%s"' % (site_uri, platform_id, site_uri))
-      local('php /var/aegir/drush/drush.php provision-install @%s' % site_uri)
+    #  local('php /var/aegir/drush/drush.php provision-save --uri="%s" --platform="@platform_%s" "@%s"' % (site_uri, platform_id, site_uri))
+    #  local('php /var/aegir/drush/drush.php provision-install @%s' % site_uri)
 
     # clean up old platform(s)
     #
