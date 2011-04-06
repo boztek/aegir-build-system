@@ -17,24 +17,26 @@ def __read_alias(alias='hostmaster'):
 
 def release(repo, tag, site_uri, sync_uri=None):
     """Build a platform from a tag, migrate the site and optionally sync db and files from another site"""
-    server = __get_alias_variable(site_uri, 'server')
     build(repo, tag, site_uri)
     if (sync_uri):
         sync_site(sync_uri, site_uri)
 
 def sync_site(source_site, dest_site):
     """Delete dest_site instance and clone from source_site with provision"""
-    platform_id = get_platform()
+    platform_id = __get_alias_variable(dest_site, 'platform')
     delete_site(dest_site)
-    # /var/aegir/drush/drush.php @$SOURCE_URL provision-clone @$DEST_URL @$DEST_PLATFORM
     local('/var/aegir/drush/drush.php @%s provision-clone @%s @%s' %
         (source_site, dest_site, platform_id))
     # Update site context object to refer to correct db server
-    # /var/aegir/drush/drush.php --db_server=@$DEST_DB provision-save @$DEST_URL
+    db_server = __get_alias_variable(dest_site, 'db_server')
+    local('php /var/aegir/drush/drush.php --db_server=@%s provision-save \
+        @%s' % (db_server, dest_site))
     # Redeploy from backup this time with correct db server
-    # /var/aegir/drush/drush.php --old_uri="$SOURCE_URL" "@$DEST_URL" provision-deploy `ls -t /var/aegir/backups/$SOURCE_URL* |head -1`
+    local('php /var/aegir/drush/drush.php --old_uri="%s" "@%s" provision-deploy `ls -t /var/aegir/backups/%s* |head -1' % 
+        (source_site, dest_site, source_site))
     # Verify destination platform to import site into aegir front end
-    # /var/aegir/drush/drush.php @hostmaster hosting-task @$DEST_PLATFORM verify
+    local('php /var/aegir/drush/drush.php @hostmaster hosting-task \
+        @%s verify'% (dest_site))
 
 def delete_site(site_uri):
     """Disable and delete a site instance after making a backup"""
