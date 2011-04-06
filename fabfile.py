@@ -1,11 +1,36 @@
 from fabric.api import local, settings, abort, run, cd, lcd, env
 from fabric.contrib.console import confirm
-from datetime import date
+from datetime import datetime, date
 
-def release(stub, tag, site_uri, sync_uri):
+def release(repo, tag, site_uri, sync_uri):
     """Build a platform from a tag and sync db and files from another site"""
-    build(stub, release=tag)
-    sync_site(sync_uri, site_uri)
+    build(repo, tag, site_uri)
+    if (sync_uri):
+        sync_site(sync_uri, site_uri)
+
+def sync_site(source_site, dest_site):
+    """Delete dest_site instance and clone from source_site with provision"""
+    platform_id = get_platform()
+    delete_site(dest_site)
+    # /var/aegir/drush/drush.php @$SOURCE_URL provision-clone @$DEST_URL @$DEST_PLATFORM
+    local('/var/aegir/drush/drush.php @%s provision-clone @%s @%s' %
+        (source_site, dest_site, platform_id))
+    # Update site context object to refer to correct db server
+    # /var/aegir/drush/drush.php --db_server=@$DEST_DB provision-save @$DEST_URL
+    # Redeploy from backup this time with correct db server
+    # /var/aegir/drush/drush.php --old_uri="$SOURCE_URL" "@$DEST_URL" provision-deploy `ls -t /var/aegir/backups/$SOURCE_URL* |head -1`
+    # Verify destination platform to import site into aegir front end
+    # /var/aegir/drush/drush.php @hostmaster hosting-task @$DEST_PLATFORM verify
+
+def delete_site(site_uri):
+    """Disable and delete a site instance after making a backup"""
+    local('php /var/aegir/drush/drush.php @%s provision-backup' % site_uri)
+    local('php /var/aegir/drush/drush.php @hostmaster \
+        hosting-task @%s disable' % site_uri)
+    local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
+    local('php /var/aegir/drush/drush.php @hostmaster \
+        hosting-task @%s delete' % site_uri)
+    local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
 
 def provision_site(site_uri, platform_id, app_id):
     """If site_uri exists migrate to platform_id else install new site"""
@@ -46,21 +71,28 @@ def build_platform(buildfile, platform_id, app_id):
     local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
     local('drush @hostmaster hosting-import @platform_%s' % platform_id)
 
-def build(stub, branch=None, site_uri=None, migrate=True, release=None):
-    repo = local('php get_profile_repo.php %s' % stub, True)
-    app_id = local('php get_profile_name.php %s' % stub, True)
-    if (not branch):
-        branch = local('php get_profile_branch.php %s' % stub, True)
-    # build id is now project-SHA1 where SHA1 is head of branch
-    tmp_repo = '/tmp/' + app_id
+def build(repo, branch='develop', site_uri=None, release=None):
+    """Check out source code and extract platform build stub from repo and build platform with provision"""
+    tmp_repo = '/tmp/provision_platform_src_' + 
+        datetime.now().strftime('%Y%m%d%H%M%S')
     local('rm -rf %s' % (tmp_repo))
-    local('git clone -b %s %s %s' % (branch, repo, tmp_repo))
+    local('git clone %s %s' % (repo, tmp_repo))
     with lcd(tmp_repo):
+        local('git checkout %s' % (branch))
+        # assume only one .build file in source code root
+        app_id = local('ls |grep build |head -1 |cut -d'.' -f1')
+        # if stub:
+        #     app_id = local('php get_profile_name.php %s' % (stub), True)
         commit_id = local('git log --format="%h" -1', True)
+app_id))
+    # At the moment we keep only one build stub at any one time
+    local('mkdir -pv /var/aegir/builds/%s' % app_id)
+    local('cp %s/%s.build /var/aegir/builds/%s/%s.build' % 
+        (temp_repo, app_id, app_id, app_id))
     local('rm -rf %s' % (tmp_repo))
-    # if build of this commit already exists quit
     platform_id = app_id + commit_id
+    stub = '/var/aegir/builds/%s/%s.build' % (app_id, app_id)
     build_platform(stub, platform_id, app_id)
     # migrate site
-    if (site_uri and migrate):
+    if (site_uri):
         provision_site(site_uri, platform_id, app_id)
