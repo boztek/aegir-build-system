@@ -54,7 +54,7 @@ def provision_site(site_uri, platform_id, app_id):
         local('php /var/aegir/drush/drush.php provision-install @%s' % 
             (site_uri))
 
-def build_platform(buildfile, platform_id, app_id):
+def build_platform(buildfile, platform_id, app_id, server):
     """Build a platform from a build level drush make file using provision"""
     # exit if platform exists
     with settings(warn_only=True):
@@ -65,13 +65,13 @@ def build_platform(buildfile, platform_id, app_id):
             print "Platform to be built: @platform_" + platform_id
     path_to_platform = "/var/aegir/platforms/" + app_id + "/" + platform_id
     local('drush provision-save @platform_%s --context_type=platform \
-            --root="%s" --makefile="%s"' % 
-            (platform_id, path_to_platform, buildfile))
+            --root="%s" --makefile="%s" --server="%s"' % 
+            (platform_id, path_to_platform, buildfile, server))
     local('drush provision-verify @platform_%s' % platform_id)
     local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
     local('drush @hostmaster hosting-import @platform_%s' % platform_id)
 
-def build(repo, branch='develop', site_uri=None, release=None):
+def build(repo, branch='develop', site_uri=None, server=None):
     """Check out source code and extract platform build stub from repo and build platform with provision"""
     tmp_repo = '/tmp/provision_platform_src_' + 
         datetime.now().strftime('%Y%m%d%H%M%S')
@@ -92,7 +92,7 @@ app_id))
     local('rm -rf %s' % (tmp_repo))
     platform_id = app_id + commit_id
     stub = '/var/aegir/builds/%s/%s.build' % (app_id, app_id)
-    build_platform(stub, platform_id, app_id)
+    build_platform(stub, platform_id, app_id, server)
     # migrate site
     if (site_uri):
         provision_site(site_uri, platform_id, app_id)
