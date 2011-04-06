@@ -51,7 +51,7 @@ def delete_site(site_uri):
 def provision_site(site_uri, platform_id, app_id):
     """If site_uri exists migrate to platform_id else install new site"""
     with settings(warn_only=True):
-        existing_site = local('drush sa |grep "%s"' % site_uri, True)
+        existing_site = local('php /var/aegir/drush/drush.php sa |grep "%s"' % site_uri, True)
     if existing_site:
         local('php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify' % platform_id)
         local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
@@ -74,7 +74,7 @@ def build_platform(buildfile, platform_id, app_id, server):
     """Build a platform from a build level drush make file using provision"""
     # exit if platform exists
     with settings(warn_only=True):
-        existing_platform = local('drush sa |grep "platform_%s"' % platform_id, True)
+        existing_platform = local('php /var/aegir/drush/drush.php sa |grep "platform_%s"' % platform_id, True)
         if (existing_platform):
             exit("PLATFORM EXISTS")
         else:
