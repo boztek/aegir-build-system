@@ -87,11 +87,11 @@ def build_platform(buildfile, platform_id, app_id, server):
     local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
     local('drush @hostmaster hosting-import @platform_%s' % platform_id)
 
-def build(repo, branch='develop', site_uri=None, server=None):
+def build(git_url, branch='develop', site_uri=None, server=None):
     """Check out source code and extract platform build stub from repo and build platform with provision"""
     tmp_repo = '/tmp/provision_platform_src_' + datetime.now().strftime('%Y%m%d%H%M%S')
     local('rm -rf %s' % (tmp_repo))
-    local('git clone %s %s' % (repo, tmp_repo))
+    local('git clone %s %s' % (git_url, tmp_repo))
     with lcd(tmp_repo):
         local('git checkout %s' % (branch))
         # assume only one .build file in source code root
