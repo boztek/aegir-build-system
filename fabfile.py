@@ -77,7 +77,7 @@ def build_platform(buildfile, platform_id, app_id, server):
         existing_platform = local('drush sa |grep "platform_%s"' % platform_id, True)
         if (existing_platform):
             exit("PLATFORM EXISTS")
-        else
+        else:
             print "Platform to be built: @platform_" + platform_id
     path_to_platform = "/var/aegir/platforms/" + app_id + "/" + platform_id
     local('drush provision-save @platform_%s --context_type=platform \
