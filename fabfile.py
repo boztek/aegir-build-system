@@ -97,7 +97,6 @@ def build(repo, branch='develop', site_uri=None, server=None):
         # assume only one .build file in source code root
         app_id = local("ls |grep build |head -1 |cut -d'.' -f1")
         commit_id = local('git log --format="%h" -1', True)
-app_id))
     # At the moment we keep only one build stub at any one time
     local('mkdir -pv /var/aegir/builds/%s' % app_id)
     local('cp %s/%s.build /var/aegir/builds/%s/%s.build' % 
