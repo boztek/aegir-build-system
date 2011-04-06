@@ -29,7 +29,7 @@ def provision_site(site_uri, platform_id, app_id):
         local('php /var/aegir/drush/drush.php provision-install @%s' % 
             (site_uri))
 
-def build_platform(buildfile, platform_id):
+def build_platform(buildfile, platform_id, app_id):
     """Build a platform from a build level drush make file using provision"""
     # exit if platform exists
     with settings(warn_only=True):
@@ -60,7 +60,7 @@ def build(stub, branch=None, site_uri=None, migrate=True, release=None):
     local('rm -rf %s' % (tmp_repo))
     # if build of this commit already exists quit
     platform_id = app_id + commit_id
-    build_platform(stub, platform_id)
+    build_platform(stub, platform_id, app_id)
     # migrate site
     if (site_uri and migrate):
         provision_site(site_uri, platform_id, app_id)
