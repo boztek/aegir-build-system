@@ -12,8 +12,8 @@ def __get_alias_variable(alias='hostmaster', variable='db_server'):
 
 def __read_alias(alias='hostmaster'):
 	alias_file = "/var/aegir/.drush/%s.alias.drushrc.php" % alias
-    json_array = local("php -r 'require(\"%s\"); print json_encode($aliases);'" % alias_file, True)
-    return json.loads(json_array)[alias]
+        json_array = local("php -r 'require(\"%s\"); print json_encode($aliases);'" % alias_file, True)
+        return json.loads(json_array)[alias]
 
 def release(repo, tag, site_uri, sync_uri=None):
     """Build a platform from a tag, migrate the site and optionally sync db and files from another site"""
