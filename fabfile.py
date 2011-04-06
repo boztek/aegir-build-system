@@ -2,9 +2,7 @@ from fabric.api import local, settings, abort, run, cd, lcd, env
 from fabric.contrib.console import confirm
 from datetime import date
 
-def build(stub, branch='develop', domain='pinkgators.com'):
-    # parse project stub (in /var/aegir/build/project.build) 
-    #   to get profile repo and clone it to tmp
+def build(stub, branch='develop', site_uri=None, migrate=True, sync=None):
     repo = local('php get_profile_repo.php %s' % stub, True)
     stub_id = local('php get_profile_name.php %s' % stub, True)
     site_uri = stub_id + "-dev." + domain
@@ -19,7 +17,7 @@ def build(stub, branch='develop', domain='pinkgators.com'):
         commit_id = local('git log --format="%h" -1', True)
     local('rm -rf %s' % (tmp_repo))
 
-    # if @platform_projectSHA1 exits quit
+    # if build of this commit already exists quit
     platform_id = stub_id + commit_id
     with settings(warn_only=True):
         existing_platform = local('drush sa |grep "platform_%s"' % platform_id, True)
