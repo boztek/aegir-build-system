@@ -94,6 +94,7 @@ def build(git_url, branch='develop', site_uri=None, server=None):
     local('rm -rf %s' % (tmp_repo))
     local('git clone %s %s' % (git_url, tmp_repo))
     with lcd(tmp_repo):
+        # checkout either a tag or branch
         local('git checkout %s' % (branch))
         # assume only one .build file in source code root
         app_id = local("ls |grep build |head -1 |cut -d'.' -f1", True)
