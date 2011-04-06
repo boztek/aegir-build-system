@@ -15,6 +15,7 @@ def __read_alias(alias='hostmaster'):
     json_array = local("/usr/bin/php -r 'require(\"%s\"); print json_encode($aliases);'" % alias_file, True)
     return json.loads(json_array)[alias]
 
+
 def release(repo, tag, site_uri, sync_uri=None):
     """Build a platform from a tag, migrate the site and optionally sync db and files from another site"""
     build(repo, tag, site_uri)
