@@ -104,6 +104,7 @@ def build(git_url, branch='develop', site_uri=None, server=None):
     local('rm -rf %s' % (tmp_repo))
     platform_id = app_id + commit_id
     stub = '/var/aegir/builds/%s/%s.build' % (app_id, app_id)
+    p_server = None
     if (server):
         p_server = server
     elif (site_uri):
