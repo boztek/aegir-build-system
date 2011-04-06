@@ -12,7 +12,7 @@ def __get_alias_variable(alias='hostmaster', variable='db_server'):
 
 def __read_alias(alias='hostmaster'):
     alias_file = "/var/aegir/.drush/%s.alias.drushrc.php" % alias
-    json_array = local("php -r 'require(\"%s\"); print json_encode($aliases);'" % alias_file, True)
+    json_array = local("/usr/bin/php -r 'require(\"%s\"); print json_encode($aliases);'" % alias_file, True)
     return json.loads(json_array)[alias]
 
 def release(repo, tag, site_uri, sync_uri=None):
@@ -100,7 +100,7 @@ def build(git_url, branch='develop', site_uri=None, server=None):
     # At the moment we keep only one build stub at any one time
     local('mkdir -pv /var/aegir/builds/%s' % app_id)
     local('cp %s/%s.build /var/aegir/builds/%s/%s.build' % 
-        (temp_repo, app_id, app_id, app_id))
+        (tmp_repo, app_id, app_id, app_id))
     local('rm -rf %s' % (tmp_repo))
     platform_id = app_id + commit_id
     stub = '/var/aegir/builds/%s/%s.build' % (app_id, app_id)
