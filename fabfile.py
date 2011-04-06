@@ -1,9 +1,23 @@
 from fabric.api import local, settings, abort, run, cd, lcd, env
 from fabric.contrib.console import confirm
 from datetime import datetime, date
+import json
 
-def release(repo, tag, site_uri, sync_uri):
-    """Build a platform from a tag and sync db and files from another site"""
+
+def test():
+	print __get_alias_variable()
+
+def __get_alias_variable(alias='hostmaster', variable='db_server'):
+	return __read_alias(alias)[variable]
+
+def __read_alias(alias='hostmaster'):
+	alias_file = "/var/aegir/.drush/%s.alias.drushrc.php" % alias
+        json_array = local("php -r 'require(\"%s\"); print json_encode($aliases);'" % alias_file)
+        return json.loads(json_array)[alias]
+
+def release(repo, tag, site_uri, sync_uri=None):
+    """Build a platform from a tag, migrate the site and optionally sync db and files from another site"""
+    server = __get_alias_variable(site_uri, 'server')
     build(repo, tag, site_uri)
     if (sync_uri):
         sync_site(sync_uri, site_uri)
@@ -81,8 +95,6 @@ def build(repo, branch='develop', site_uri=None, server=None):
         local('git checkout %s' % (branch))
         # assume only one .build file in source code root
         app_id = local('ls |grep build |head -1 |cut -d'.' -f1')
-        # if stub:
-        #     app_id = local('php get_profile_name.php %s' % (stub), True)
         commit_id = local('git log --format="%h" -1', True)
 app_id))
     # At the moment we keep only one build stub at any one time
@@ -92,7 +104,14 @@ app_id))
     local('rm -rf %s' % (tmp_repo))
     platform_id = app_id + commit_id
     stub = '/var/aegir/builds/%s/%s.build' % (app_id, app_id)
-    build_platform(stub, platform_id, app_id, server)
+    if (server):
+        p_server = server
+    elif (site_uri):
+        p_server = __get_alias_variable(site_uri, 'server')
+    if (p_server):
+        build_platform(stub, platform_id, app_id, server)
+    else:
+        exit('No server details provided either directly or through site default')
     # migrate site
     if (site_uri):
         provision_site(site_uri, platform_id, app_id)
