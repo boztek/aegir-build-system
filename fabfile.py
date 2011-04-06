@@ -80,12 +80,12 @@ def build_platform(buildfile, platform_id, app_id, server):
         else:
             print "Platform to be built: @platform_" + platform_id
     path_to_platform = "/var/aegir/platforms/" + app_id + "/" + platform_id
-    local('drush provision-save @platform_%s --context_type=platform \
+    local('php /var/aegir/drush/drush.php provision-save @platform_%s --context_type=platform \
             --root="%s" --makefile="%s" --server="%s"' % 
             (platform_id, path_to_platform, buildfile, server))
-    local('drush provision-verify @platform_%s' % platform_id)
+    local('php /var/aegir/drush/drush.php provision-verify @platform_%s' % platform_id)
     local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
-    local('drush @hostmaster hosting-import @platform_%s' % platform_id)
+    local('php /var/aegir/drush/drush.php @hostmaster hosting-import @platform_%s' % platform_id)
 
 def build(git_url, branch='develop', site_uri=None, server=None):
     """Check out source code and extract platform build stub from repo and build platform with provision"""
