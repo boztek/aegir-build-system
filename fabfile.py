@@ -119,7 +119,7 @@ def build(git_url, branch='develop', site_uri=None, server=None):
     elif (site_uri):
         p_server = __get_alias_variable(site_uri, 'server')
     if (p_server):
-        print "Building " +app_id+ " on server '" +server+ "'"
+        print "Building '" +app_id+ "' on server '" +server+ "'"
         build_platform(stub, platform_id, app_id, server)
     else:
         exit('No server details provided either directly or through site default')
