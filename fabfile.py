@@ -122,7 +122,7 @@ def build(git_url, branch='develop', site_uri=None, server_id=None):
     stub = '/var/aegir/builds/%s/%s.build' % (app_id, app_id)
     p_server = None
     if (server_id):
-        p_server = '@server_' + server
+        p_server = '@server_' + server_id
     elif (site_uri):
         p_server = __get_alias_variable(site_uri, 'server')
     if (p_server):
