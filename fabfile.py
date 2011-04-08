@@ -65,12 +65,15 @@ def provision_site(site_uri, platform_id, app_id, db_server_id=None, email='emai
     with settings(warn_only=True):
         existing_site = local('php /var/aegir/drush/drush.php sa |grep "%s"' % site_uri, True)
     if existing_site:
+        alias = '@'+site_uri
+        db_server = __get_alias_variable(alias, 'db_server')
         local('php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify' % platform_id)
         local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
         local("php /var/aegir/drush/drush.php @%s provision-migrate '@platform_%s'" % (site_uri, platform_id))
         backup = local('ls -t /var/aegir/backups/%s-* | head -1' % (site_uri), True)
         print "Deploying from backup: " + backup
         local("php /var/aegir/drush/drush.php --old_uri='%s' @%s provision-deploy %s" % (site_uri, site_uri, backup))
+        local('php /var/aegir/drush/drush.php provision-save @%s --context_type=site --uri=%s --platform=@platform_%s --db_server=%s --profile=%s' % (site_uri,site_uri,platform_id,db_server,app_id))
         local("php /var/aegir/drush/drush.php @hostmaster hosting-import @%s" % (site_uri))
         local("php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify" % platform_id)
         local("php /var/aegir/drush/drush.php @hostmaster hosting-task @%s verify" % site_uri)
