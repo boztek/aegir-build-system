@@ -76,7 +76,7 @@ def provision_site(site_uri, platform_id, app_id, db_server_id=None, email='emai
         local("php /var/aegir/drush/drush.php @hostmaster hosting-task @%s verify" % site_uri)
     else:
         # provision-site @site_uri
-        if (not db_server):
+        if (not db_server_id):
             exit('New site provisioning and db_server not given.')
         _provision_new_site(site_uri, platform_id, app_id, db_server_id, email)
 
