@@ -58,6 +58,7 @@ def _provision_new_site(site_uri, platform_id, app_id, db_server_id, email):
     local('php /var/aegir/drush/drush.php @%s provision-install --debug' % (site_uri))
     local('php /var/aegir/drush/drush.php @%s provision-verify --debug' % (site_uri))
     local('php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify' % (platform_id))
+    local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
 
 def provision_site(site_uri, platform_id, app_id, db_server_id=None, email='email@client.com'):
     """If site_uri exists migrate to platform_id else install new site"""
