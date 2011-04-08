@@ -52,7 +52,14 @@ def delete_site(site_uri):
     local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
 
 
-def provision_site(site_uri, platform_id, app_id):
+def _provision_new_site(site_uri, platform_id, app_id, db_server_id):
+    """Provision a new site instance and import into hostmaster front end"""
+    local('php /var/aegir/drush/drush.php provision-save @%s --context_type=site --uri=%s --platform=@platform_%s --db_server=@server_%s --client_email=%s --profile=%s' % (site_uri,site_uri,platform_id,db_server_id,email,app_id))
+    local('php /var/aegir/drush/drush.php @%s provision-install --debug' % (site_uri))
+    local('php /var/aegir/drush/drush.php @%s provision-verify --debug' % (site_uri))
+    local('php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify' % (platform_id))
+
+def provision_site(site_uri, platform_id, app_id, db_server_id=None, email='email@client.com'):
     """If site_uri exists migrate to platform_id else install new site"""
     with settings(warn_only=True):
         existing_site = local('php /var/aegir/drush/drush.php sa |grep "%s"' % site_uri, True)
@@ -69,14 +76,9 @@ def provision_site(site_uri, platform_id, app_id):
         local("php /var/aegir/drush/drush.php @hostmaster hosting-task @%s verify" % site_uri)
     else:
         # provision-site @site_uri
-        print "INSTALL SITE CODE HERE ..." + site_uri + ' ' + platform_id
-        local('php /var/aegir/drush/drush.php provision-save --uri="%s" \
-           --platform="@platform_%s" "@%s"' % (site_uri,platform_id,site_uri))
-        local('php /var/aegir/drush/drush.php provision-install @%s' % (site_uri))
-        local("php /var/aegir/drush/drush.php @hostmaster hosting-import @%s" % (site_uri))
-        local("php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify" % platform_id)
-        local("php /var/aegir/drush/drush.php @hostmaster hosting-task @%s verify" % site_uri)
-        local("php /var/aegir/drush/drush.php @hostmaster hosting-task @%s verify" % site_uri)
+        if (not db_server):
+            exit('New site provisioning and db_server not given.')
+        _provision_new_site(site_uri, platform_id, app_id, db_server_id, email)
 
 
 def build_platform(buildfile, platform_id, app_id, server):
