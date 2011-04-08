@@ -92,10 +92,9 @@ def build_platform(buildfile, platform_id, app_id, server):
         else:
             print "Platform to be built: @platform_" + platform_id
     path_to_platform = "/var/aegir/platforms/" + app_id + "/" + platform_id
-    local('php /var/aegir/drush/drush.php provision-save @platform_%s --context_type=platform \
-            --root="%s" --makefile="%s" --server="%s"' % 
+    local('php /var/aegir/drush/drush.php provision-save @platform_%s --context_type=platform --root="%s" --makefile="%s" --server="%s"' % 
             (platform_id, path_to_platform, buildfile, server))
-    local('php /var/aegir/drush/drush.php provision-verify @platform_%s' % platform_id)
+    local('php /var/aegir/drush/drush.php provision-verify @platform_%s --debug' % platform_id)
     local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
     local('php /var/aegir/drush/drush.php @hostmaster hosting-import @platform_%s' % platform_id)
     local('php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify' % platform_id)
