@@ -54,7 +54,7 @@ def delete_site(site_uri):
 
 def _provision_new_site(site_uri, platform_id, app_id, db_server_id, email):
     """Provision a new site instance and import into hostmaster front end"""
-    local('php /var/aegir/drush/drush.php provision-save @%s --context_type=site --uri=%s --platform=@platform_%s --db_server=@server_%s --client_email=%s --profile=%s' % (site_uri,site_uri,platform_id,db_server_id,email,app_id,site_uri))
+    local('php /var/aegir/drush/drush.php provision-save @%s --context_type=site --uri=%s --platform=@platform_%s --db_server=@server_%s --client_email=%s --profile=%s' % (site_uri,site_uri,platform_id,db_server_id,email,app_id))
     local('php /var/aegir/drush/drush.php @%s provision-install --debug' % (site_uri))
     local('php /var/aegir/drush/drush.php @%s provision-verify --debug' % (site_uri))
     local('php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify' % (platform_id))
