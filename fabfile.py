@@ -65,8 +65,7 @@ def provision_site(site_uri, platform_id, app_id, db_server_id=None, email='emai
     with settings(warn_only=True):
         existing_site = local('php /var/aegir/drush/drush.php sa |grep "%s"' % site_uri, True)
     if existing_site:
-        alias = '@'+site_uri
-        db_server = __get_alias_variable(alias, 'db_server')
+        db_server = __get_alias_variable(site_uri, 'db_server')
         local('php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify' % platform_id)
         local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
         local("php /var/aegir/drush/drush.php @%s provision-migrate '@platform_%s'" % (site_uri, platform_id))
