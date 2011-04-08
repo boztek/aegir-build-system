@@ -68,7 +68,6 @@ def provision_site(site_uri, platform_id, app_id, db_server_id=None, email='emai
         local('php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify' % platform_id)
         local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
         local("php /var/aegir/drush/drush.php @%s provision-migrate '@platform_%s'" % (site_uri, platform_id))
-        # local("php /var/aegir/drush/drush.php --uri='%s' --platform='@platform_%s' --root='/var/aegir/platforms/%s/%s' --profile='%s' provision-save '@%s'" % (site_uri, platform_id, app_id, platform_id, app_id, site_uri))
         backup = local('ls -t /var/aegir/backups/%s-* | head -1' % (site_uri), True)
         print "Deploying from backup: " + backup
         local("php /var/aegir/drush/drush.php --old_uri='%s' @%s provision-deploy %s" % (site_uri, site_uri, backup))
@@ -78,8 +77,9 @@ def provision_site(site_uri, platform_id, app_id, db_server_id=None, email='emai
     else:
         # provision-site @site_uri
         if (not db_server_id):
-            exit('New site provisioning and db_server not given.')
-        _provision_new_site(site_uri, platform_id, app_id, db_server_id, email)
+            _provision_new_site(site_uri, platform_id, app_id, 'localhost', email)
+        else:
+            _provision_new_site(site_uri, platform_id, app_id, db_server_id, email)
 
 
 def build_platform(buildfile, platform_id, app_id, server):
@@ -102,7 +102,7 @@ def build_platform(buildfile, platform_id, app_id, server):
     local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
 
 
-def build(git_url, branch='develop', site_uri=None, server=None):
+def build(git_url, branch='develop', site_uri=None, server_id=None):
     """Check out source code and extract platform build stub from repo and build platform with provision"""
     tmp_repo = '/tmp/provision_platform_src_' + datetime.now().strftime('%Y%m%d%H%M%S')
     local('rm -rf %s' % (tmp_repo))
@@ -121,8 +121,8 @@ def build(git_url, branch='develop', site_uri=None, server=None):
     platform_id = app_id + commit_id
     stub = '/var/aegir/builds/%s/%s.build' % (app_id, app_id)
     p_server = None
-    if (server):
-        p_server = server
+    if (server_id):
+        p_server = '@server_' + server
     elif (site_uri):
         p_server = __get_alias_variable(site_uri, 'server')
     if (p_server):
