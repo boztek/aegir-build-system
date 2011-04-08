@@ -134,3 +134,4 @@ def build(git_url, branch='develop', site_uri=None, server_id=None):
     # migrate site
     if (site_uri):
         provision_site(site_uri, platform_id, app_id)
+
