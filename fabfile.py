@@ -70,10 +70,13 @@ def provision_site(site_uri, platform_id, app_id):
     else:
         # provision-site @site_uri
         print "INSTALL SITE CODE HERE ..." + site_uri + ' ' + platform_id
-        # local('php /var/aegir/drush/drush.php provision-save --uri="%s" \
-        #    --platform="@platform_%s" "@%s"'%(site_uri,platform_id,site_uri))
-        # local('php /var/aegir/drush/drush.php provision-install @%s' % 
-        #     (site_uri))
+        local('php /var/aegir/drush/drush.php provision-save --uri="%s" \
+           --platform="@platform_%s" "@%s"' % (site_uri,platform_id,site_uri))
+        local('php /var/aegir/drush/drush.php provision-install @%s' % (site_uri))
+        local("php /var/aegir/drush/drush.php @hostmaster hosting-import @%s" % (site_uri))
+        local("php /var/aegir/drush/drush.php @hostmaster hosting-task @platform_%s verify" % platform_id)
+        local("php /var/aegir/drush/drush.php @hostmaster hosting-task @%s verify" % site_uri)
+        local("php /var/aegir/drush/drush.php @hostmaster hosting-task @%s verify" % site_uri)
 
 
 def build_platform(buildfile, platform_id, app_id, server):
