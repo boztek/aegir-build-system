@@ -112,7 +112,7 @@ def build(git_url, branch='develop', site_uri=None, server_id=None):
         # checkout either a tag or branch
         local('git checkout %s' % (branch))
         # assume only one .build file in source code root
-        app_id = local("ls |grep build |head -1 |cut -d'.' -f1", True)
+        app_id = local("ls |egrep '\.build$' |head -1 |cut -d'.' -f1", True)
         commit_id = local('git log --format="%h" -1', True)
     # At the moment we keep only one build stub at any one time
     local('mkdir -pv /var/aegir/builds/%s' % app_id)
@@ -134,4 +134,6 @@ def build(git_url, branch='develop', site_uri=None, server_id=None):
     # migrate site
     if (site_uri):
         provision_site(site_uri, platform_id, app_id)
+        local('php /var/aegir/drush/drush.php @%s cache-clear all' % site_uri)
+
 
