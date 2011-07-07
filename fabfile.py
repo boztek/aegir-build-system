@@ -21,24 +21,29 @@ def release(repo, tag, site_uri, sync_uri=None):
     build(repo, tag, site_uri)
     if (sync_uri):
         sync_site(sync_uri, site_uri)
-
+    local('php /var/aegir/drush/drush.php @%s cache-clear all' % site_uri)
+    local('php /var/aegir/drush/drush.php @%s cache-clear all' % site_uri)
+    local('php /var/aegir/drush/drush.php @%s features-list' % site_uri)
+    local('php /var/aegir/drush/drush.php --yes @%s features-revert-all' % site_uri)
+    local('php /var/aegir/drush/drush.php @%s cache-clear all' % site_uri)
 
 def sync_site(source_site, dest_site):
     """Delete dest_site instance and clone from source_site with provision"""
-    platform_id = __get_alias_variable(dest_site, 'platform')
+    platform = __get_alias_variable(dest_site, 'platform')
     delete_site(dest_site)
-    local('/var/aegir/drush/drush.php @%s provision-clone @%s @%s' %
-        (source_site, dest_site, platform_id))
+    local('/var/aegir/drush/drush.php @%s provision-clone @%s %s' %
+        (source_site, dest_site, platform))
     # Update site context object to refer to correct db server
     db_server = __get_alias_variable(dest_site, 'db_server')
-    local('php /var/aegir/drush/drush.php --db_server=@%s provision-save \
-        @%s' % (db_server, dest_site))
+    local('php /var/aegir/drush/drush.php --db_server="%s" provision-save \
+        "@%s"' % (db_server, dest_site))
     # Redeploy from backup this time with correct db server
-    local('php /var/aegir/drush/drush.php --old_uri="%s" "@%s" provision-deploy `ls -t /var/aegir/backups/%s* |head -1' % 
+    local('php /var/aegir/drush/drush.php --old_uri="%s" "@%s" provision-deploy `ls -t /var/aegir/backups/%s* |head -1`' % 
         (source_site, dest_site, source_site))
     # Verify destination platform to import site into aegir front end
     local('php /var/aegir/drush/drush.php @hostmaster hosting-task \
-        @%s verify'% (dest_site))
+        %s verify'% (platform))
+    local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
 
 
 def delete_site(site_uri):
@@ -94,7 +99,7 @@ def build_platform(buildfile, platform_id, app_id, server):
         else:
             print "Platform to be built: @platform_" + platform_id
     path_to_platform = "/var/aegir/platforms/" + app_id + "/" + platform_id
-    local('php /var/aegir/drush/drush.php provision-save @platform_%s --context_type=platform --root="%s" --makefile="%s" --server="%s"' % 
+    local('php /var/aegir/drush/drush.php provision-save @platform_%s --context_type=platform --root="%s" --makefile="%s" --web_server="%s"' % 
             (platform_id, path_to_platform, buildfile, server))
     local('php /var/aegir/drush/drush.php provision-verify @platform_%s --debug' % platform_id)
     local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
@@ -125,15 +130,24 @@ def build(git_url, branch='develop', site_uri=None, server_id=None):
     if (server_id):
         p_server = '@server_' + server_id
     elif (site_uri):
-        p_server = __get_alias_variable(site_uri, 'server')
+        pid = __get_alias_variable(site_uri, 'platform')
+        pid = pid[1:]
+        p_server = __get_alias_variable(pid, 'web_server')
     if (p_server):
         print "Building '" +app_id+ "' on server '" +p_server+ "'"
         build_platform(stub, platform_id, app_id, p_server)
+        with settings(warn_only=True):
+            if (branch == 'develop'):
+                with lcd('/var/aegir/platforms/%s' % app_id):
+                    local('rm dev.%s' % app_id)
+                    local('ln -s %s dev.%s' % (platform_id, app_id))
     else:
         exit('No server details provided either directly or through site default')
     # migrate site
     if (site_uri):
         provision_site(site_uri, platform_id, app_id)
         local('php /var/aegir/drush/drush.php @%s cache-clear all' % site_uri)
+        local('php /var/aegir/drush/drush.php @%s cache-clear all' % site_uri)
+        local('php /var/aegir/drush/drush.php --yes @%s features-revert-all' % site_uri)
 
 
