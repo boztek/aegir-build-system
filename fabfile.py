@@ -18,7 +18,7 @@ def __read_alias(alias='hostmaster'):
 
 def release(repo, tag, site_uri, sync_uri=None):
     """Build a platform from a tag, migrate the site and optionally sync db and files from another site"""
-    build(repo, tag, site_uri)
+    build(repo, tag, site_uri, None, False)
     if (sync_uri):
         sync_site(sync_uri, site_uri)
     local('php /var/aegir/drush/drush.php @%s cache-clear all' % site_uri)
@@ -108,7 +108,7 @@ def build_platform(buildfile, platform_id, app_id, server):
     local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
 
 
-def build(git_url, branch='develop', site_uri=None, server_id=None):
+def build(git_url, branch='develop', site_uri=None, server_id=None, revert=True):
     """Check out source code and extract platform build stub from repo and build platform with provision"""
     tmp_repo = '/tmp/provision_platform_src_' + datetime.now().strftime('%Y%m%d%H%M%S')
     local('rm -rf %s' % (tmp_repo))
@@ -146,8 +146,11 @@ def build(git_url, branch='develop', site_uri=None, server_id=None):
     # migrate site
     if (site_uri):
         provision_site(site_uri, platform_id, app_id)
-        local('php /var/aegir/drush/drush.php @%s cache-clear all' % site_uri)
-        local('php /var/aegir/drush/drush.php @%s cache-clear all' % site_uri)
-        local('php /var/aegir/drush/drush.php --yes @%s features-revert-all' % site_uri)
+        if (revert):
+            local('php /var/aegir/drush/drush.php @%s cache-clear all' % site_uri)
+            local('php /var/aegir/drush/drush.php @%s cache-clear all' % site_uri)
+            local('php /var/aegir/drush/drush.php @%s features-list' % site_uri)
+            # local('php /var/aegir/drush/drush.php --yes @%s features-revert-all' % site_uri)
+            local('php /var/aegir/drush/drush.php --yes @%s features-revert `drush @%s features-list |grep Overridden |cut -b37-67 |tr -d \' \' |xargs`' % (site_uri, site_uri))
 
 
