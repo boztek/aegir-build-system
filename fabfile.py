@@ -28,23 +28,11 @@ def release(repo, tag, site_uri, sync_uri=None):
     local('php /var/aegir/drush/drush.php @%s cache-clear all' % site_uri)
 
 def sync_site(source_site, dest_site):
-    """Delete dest_site instance and clone from source_site with provision"""
-    platform = __get_alias_variable(dest_site, 'platform')
-    delete_site(dest_site)
-    local('/var/aegir/drush/drush.php @%s provision-clone @%s %s' %
-        (source_site, dest_site, platform))
-    # Update site context object to refer to correct db server
-    db_server = __get_alias_variable(dest_site, 'db_server')
-    local('php /var/aegir/drush/drush.php --db_server="%s" provision-save \
-        "@%s"' % (db_server, dest_site))
-    # Redeploy from backup this time with correct db server
-    local('php /var/aegir/drush/drush.php --old_uri="%s" "@%s" provision-deploy `ls -t /var/aegir/backups/%s* |head -1`' % 
-        (source_site, dest_site, source_site))
-    # Verify destination platform to import site into aegir front end
-    local('php /var/aegir/drush/drush.php @hostmaster hosting-task \
-        %s verify'% (platform))
-    local('php /var/aegir/drush/drush.php @hostmaster hosting-dispatch')
-
+    """Backup source site and deploy to destination site"""
+    local('php /var/aegir/drush/drush.php @%s provision-backup' % source_site)
+    local('drush --old_uri="%s" "@%s" provision-deploy \
+          /var/aegir/backups/`ls -t /var/aegir/backups/ |grep %s |head -1`'
+          % (source_site, dest_site, source_site))
 
 def delete_site(site_uri):
     """Disable and delete a site instance after making a backup"""
