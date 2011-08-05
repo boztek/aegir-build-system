@@ -33,12 +33,16 @@ def sync_site(source_site, dest_site):
     local('drush --old_uri="%s" "@%s" provision-deploy \
           /var/aegir/backups/`ls -t /var/aegir/backups/ |grep %s |head -1`'
           % (source_site, dest_site, source_site))
+    local("php /var/aegir/drush/drush.php @hostmaster hosting-import @%s"
+          % (site_uri))
 
 def rollback(site_uri):
     """Deploy last backup to a site"""
     local('drush "@%s" provision-deploy \
           /var/aegir/backups/`ls -t /var/aegir/backups/ |grep %s |head -1`'
           % (site_uri, site_uri))
+    local("php /var/aegir/drush/drush.php @hostmaster hosting-import @%s"
+          % (site_uri))
 
 def delete_site(site_uri):
     """Disable and delete a site instance after making a backup"""
